@@ -39,3 +39,26 @@ def linear_forward(a: np.array, w: np.ndarray, b: np.array) -> Tuple[np.array, D
     return z, linear_cache
 
 
+# 1.c
+def softmax(z: np.array) -> Tuple[np.array, np.array]:
+    """
+    :param z:   The linear component of the activation function
+    :return:    a – the softmax activations of the layer
+                activation_cache – returns Z, which will be useful for the backpropagation
+    """
+    a = np.exp(z) / np.exp(z).sum()
+    return a, z
+
+
+# 1.d
+def relu(z: np.array) -> Tuple[np.array, np.array]:
+    """
+    :param z:   The linear component of the activation function
+    :return:    a – the relu activations of the layer
+                activation_cache – returns Z, which will be useful for the backpropagation
+    """
+    a = np.maximum(0, z)
+    return a, z
+
+
+
