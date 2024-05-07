@@ -61,4 +61,28 @@ def relu(z: np.array) -> Tuple[np.array, np.array]:
     return a, z
 
 
+# 1.e
+def linear_activation_forward(
+        a_prev: np.array, w: np.ndarray, b: np.array, activation: Literal["softmax", "relu"]
+) -> Tuple[np.array, Dict[str, np.ndarray]]:
+    """
+    forward propagation for the LINEAR->ACTIVATION layer
+    :param a_prev: The activations of the previous layer
+    :param w: The weight matrix of the current layer (of shape [size of current layer, size of previous layer])
+    :param b: The bias vector of the current layer (of shape [size of current layer, 1])
+    :param activation: The activation function to be used (a string, either “softmax” or “relu”)
+    :return: A – the activations of the current layer
+             cache – a joint dictionary containing both linear_cache and activation_cache
+    """
+    z, linear_cache = linear_forward(a_prev, w, b)
+    if activation == "softmax":
+        a, activation_cache = softmax(z)
+    elif activation == "relu":
+        a, activation_cache = relu(z)
+    else:
+        raise ValueError(f"activation {activation} isn't implemented")
+    cache = {**linear_cache, "Z": activation_cache}
+    return a, cache
+
+
 
