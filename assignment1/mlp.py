@@ -24,4 +24,18 @@ def initialize_parameters(layer_dims: np.array) -> Dict[str, Tuple[np.ndarray, n
     return params
 
 
+# 1.b
+def linear_forward(a: np.array, w: np.ndarray, b: np.array) -> Tuple[np.array, Dict[str, np.ndarray]]:
+    """
+     linear part of a layer's forward propagation
+    :param a: The activations of the previous layer
+    :param w: The weight matrix of the current layer (of shape [size of current layer, size of previous layer])
+    :param b: The bias vector of the current layer (of shape [size of current layer, 1])
+    :return: z – linear component of the activation function (i.e., the value before applying the non-linear function)
+             linear_cache – a dictionary containing A, W, b (stored for making the backpropagation easier to compute)
+    """
+    z = np.dot(w.T, a) + b
+    linear_cache = {"A": a, "W": w, "b": b}
+    return z, linear_cache
+
 
