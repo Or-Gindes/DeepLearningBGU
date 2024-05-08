@@ -103,8 +103,7 @@ def L_model_forward(X: np.ndarray, parameters: Dict, use_batchnorm: bool):
         A, cache = linear_activation_forward(A_prev=A_prev, W=W, b=b, activation=activation)
         caches.append(cache)
         if use_batchnorm:
-            raise NotImplemented
-            # A = apply_batchnorm(A)
+            A = apply_batchnorm(A)
         A_prev = A
 
 
@@ -121,3 +120,12 @@ def compute_cost(AL: np.ndarray, Y: np.array) -> float:
     return cost
 
 
+# 1.h
+def apply_batchnorm(A: np.array) -> np.array:
+    """
+    Performs batchnorm on the received activation values of a given layer
+    :param A: The activation values of a given layer
+    :return: NA - the normalized activation values, based on the formula learned in class
+    """
+    NA = (A - np.mean(A)) / (np.std(A) + 1e-3)
+    return NA
