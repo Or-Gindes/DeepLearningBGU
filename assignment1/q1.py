@@ -3,9 +3,11 @@ DeepLearning Assignment1 - Implementation of a simple neural network “from scr
 Authors: Or Gindes & XXXX
 """
 import numpy as np
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
+
 
 np.random.seed(42)
+EPSILON = 1e-6
 
 
 # 1.a
@@ -62,9 +64,7 @@ def relu(Z: np.array) -> Tuple[np.array, np.array]:
 
 
 # 1.e
-def linear_activation_forward(
-        A_prev: np.array, W: np.ndarray, b: np.array, activation: str
-) -> Tuple[np.array, Dict[str, np.ndarray]]:
+def linear_activation_forward(A_prev: np.array, W: np.ndarray, b: np.array, activation: str) -> Tuple:
     """
     forward propagation for the LINEAR->ACTIVATION layer
     :param A_prev: The activations of the previous layer
@@ -81,12 +81,12 @@ def linear_activation_forward(
         A, activation_cache = relu(Z)
     else:
         raise ValueError(f"activation {activation} isn't implemented")
-    cache = {**linear_cache, "Z": activation_cache}
+    cache = [linear_cache, activation_cache]
     return A, cache
 
 
 # 1.f
-def L_model_forward(X: np.ndarray, parameters: Dict, use_batchnorm: bool):
+def L_model_forward(X: np.ndarray, parameters: Dict, use_batchnorm: bool) -> Tuple[np.ndarray, List]:
     """
     forward propagation for the [LINEAR->RELU]*(L-1)->LINEAR->SOFTMAX computation
     :param X: the data, numpy array of shape (input size, number of examples)
@@ -106,6 +106,9 @@ def L_model_forward(X: np.ndarray, parameters: Dict, use_batchnorm: bool):
             A = apply_batchnorm(A)
         A_prev = A
 
+    AL = A
+    return AL, caches
+
 
 # 1.g
 def compute_cost(AL: np.ndarray, Y: np.array) -> float:
@@ -116,7 +119,7 @@ def compute_cost(AL: np.ndarray, Y: np.array) -> float:
     :return: cost – the cross-entropy cost
     """
     n_examples = Y.shape[1]
-    cost = -1 / n_examples * np.sum(np.multiply(Y, np.log(AL + 1e-3)))
+    cost = -1 / n_examples * np.sum(np.multiply(Y, np.log(AL + EPSILON)), axis=0)
     return cost
 
 
@@ -127,5 +130,5 @@ def apply_batchnorm(A: np.array) -> np.array:
     :param A: The activation values of a given layer
     :return: NA - the normalized activation values, based on the formula learned in class
     """
-    NA = (A - np.mean(A)) / (np.std(A) + 1e-3)
+    NA = (A - np.mean(A)) / (np.std(A) + EPSILON)
     return NA
