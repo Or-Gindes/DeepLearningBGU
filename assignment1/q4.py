@@ -5,7 +5,7 @@ Authors: Or Gindes & XXXX
 import os
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
-from q3 import L_layer_model, Predict
+from q3 import L_layer_model
 
 os.environ["KERAS_BACKEND"] = "torch"
 from keras_core.datasets import mnist
