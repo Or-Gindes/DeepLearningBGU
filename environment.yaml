@@ -10,5 +10,6 @@ dependencies:
   - pytorch
   - matplotlib
   - scikit-learn
+  - keras-core
   - pip:
       - ruff  # dev

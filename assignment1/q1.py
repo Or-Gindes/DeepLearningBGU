@@ -6,54 +6,55 @@ import numpy as np
 from typing import Dict, Tuple, List
 
 
-np.random.seed(42)
+np.random.seed(1)
 EPSILON = 1e-6
 
 
 # 1.a
-def initialize_parameters(layer_dims: List) -> Dict[str, Tuple[np.ndarray, np.array]]:
+def initialize_parameters(layer_dims: List) -> Dict[str, List[np.ndarray]]:
     """
     :param layer_dims:  an array of the dimensions of each layer in the network
                         (layer 0 is the size of the flattened input, layer L is the output softmax)
     :return: a dictionary containing the initialized W and b parameters of each layer (W1…WL, b1…bL)
     """
     params = {
-        f"layer_{i}": (
-            np.random.randn(layer_dims[i], layer_dims[i + 1]),  # Weights
+        f"layer_{i}": [
+            np.random.randn(layer_dims[i + 1], layer_dims[i]) / 10,  # Weights
             np.zeros((layer_dims[i + 1], 1))  # Biases
-        ) for i in range(len(layer_dims) - 1)
+        ] for i in range(len(layer_dims) - 1)
     }
     return params
 
 
 # 1.b
-def linear_forward(A: np.array, W: np.ndarray, b: np.array) -> Tuple[np.array, Dict[str, np.ndarray]]:
+def linear_forward(A: np.ndarray, W: np.ndarray, b: np.ndarray) \
+        -> Tuple[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
      linear part of a layer's forward propagation
     :param A: The activations of the previous layer
     :param W: The weight matrix of the current layer (of shape [size of current layer, size of previous layer])
     :param b: The bias vector of the current layer (of shape [size of current layer, 1])
     :return: Z – linear component of the activation function (i.e., the value before applying the non-linear function)
-             linear_cache – a dictionary containing A, W, b (stored for making the backpropagation easier to compute)
+             linear_cache – a tuple containing A, W, b (stored for making the backpropagation easier to compute)
     """
-    Z = np.dot(W.T, A) + b
-    linear_cache = {"A": A, "W": W, "b": b}
+    Z = np.dot(W, A) + b
+    linear_cache = (A, W, b)
     return Z, linear_cache
 
 
 # 1.c
-def softmax(Z: np.array) -> Tuple[np.array, np.array]:
+def softmax(Z: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
     :param Z:   The linear component of the activation function
     :return:    A – the softmax activations of the layer
                 activation_cache – returns Z, which will be useful for the backpropagation
     """
-    A = np.exp(Z) / np.exp(Z).sum()
+    A = np.exp(Z) / sum(np.exp(Z))
     return A, Z
 
 
 # 1.d
-def relu(Z: np.array) -> Tuple[np.array, np.array]:
+def relu(Z: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
     :param Z:   The linear component of the activation function
     :return:    A – the relu activations of the layer
@@ -64,7 +65,7 @@ def relu(Z: np.array) -> Tuple[np.array, np.array]:
 
 
 # 1.e
-def linear_activation_forward(A_prev: np.array, W: np.ndarray, b: np.array, activation: str) -> Tuple:
+def linear_activation_forward(A_prev: np.ndarray, W: np.ndarray, b: np.ndarray, activation: str) -> Tuple:
     """
     forward propagation for the LINEAR->ACTIVATION layer
     :param A_prev: The activations of the previous layer
@@ -97,12 +98,12 @@ def L_model_forward(X: np.ndarray, parameters: Dict, use_batchnorm: bool) -> Tup
     """
     A_prev = X
     caches = []
-    for n_layer, layer_params in parameters.items():
+    for n_layer, layer_params in enumerate(parameters.values()):
         W, b = layer_params
-        activation = "softmax" if n_layer == len(parameters) else "relu"
+        activation = "softmax" if n_layer == len(parameters) - 1 else "relu"
         A, cache = linear_activation_forward(A_prev=A_prev, W=W, b=b, activation=activation)
         caches.append(cache)
-        if use_batchnorm:
+        if use_batchnorm and activation == "relu":
             A = apply_batchnorm(A)
         A_prev = A
 
@@ -111,7 +112,7 @@ def L_model_forward(X: np.ndarray, parameters: Dict, use_batchnorm: bool) -> Tup
 
 
 # 1.g
-def compute_cost(AL: np.ndarray, Y: np.array) -> float:
+def compute_cost(AL: np.ndarray, Y: np.ndarray) -> float:
     """
     Compute cost function categorical cross-entropy loss
     :param AL: probability vector corresponding to your label predictions, shape (num_of_classes, number of examples)
@@ -119,12 +120,12 @@ def compute_cost(AL: np.ndarray, Y: np.array) -> float:
     :return: cost – the cross-entropy cost
     """
     n_examples = Y.shape[1]
-    cost = -1 / n_examples * np.sum(np.multiply(Y, np.log(AL + EPSILON)), axis=0)
+    cost = -1 / n_examples * sum(np.sum(np.multiply(Y, np.log(AL + EPSILON)), axis=0))
     return cost
 
 
 # 1.h
-def apply_batchnorm(A: np.array) -> np.array:
+def apply_batchnorm(A: np.ndarray) -> np.ndarray:
     """
     Performs batchnorm on the received activation values of a given layer
     :param A: The activation values of a given layer

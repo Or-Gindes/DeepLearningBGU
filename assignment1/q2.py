@@ -7,7 +7,7 @@ from typing import Tuple, List, Dict, Any
 
 
 # 2.a
-def linear_backward(dZ: np.array, cache: Tuple) -> Tuple:
+def linear_backward(dZ: np.ndarray, cache: Tuple) -> Tuple:
     """
     Computes the linear part of the backward propagation process of a single layer
     :param dZ: The gradient of the cost with respect to the linear output of the current layer
@@ -18,19 +18,19 @@ def linear_backward(dZ: np.array, cache: Tuple) -> Tuple:
     """
     A_prev, W, b = cache
     m = A_prev.shape[1]
-    dW = 1 / m * (dZ, A_prev.T)
+    dW = 1 / m * np.dot(dZ, A_prev.T)
     db = 1 / m * dZ.sum(axis=1, keepdims=True)
     dA_prev = np.dot(W.T, dZ)
     return dA_prev, dW, db
 
 
 # 2.b
-def linear_activation_backward(dA: np.array, cache: Tuple, activation: str) -> Tuple:
+def linear_activation_backward(dA: np.ndarray, cache: Tuple, activation: str) -> Tuple:
     """
     Compute the backward propagation for the LINEAR->ACTIVATION layer.
     The function first computes dZ and then applies the linear_backward function
     :param dA: post activation gradient of the current layer
-    :param cache: contains both the linear cache and the activations cache
+    :param cache:  cache contains both the linear and the activations cache
     :param activation: The activation function to be used (a string, either “softmax” or “relu”)
     :return: dA_prev – Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
     :return: dW – Gradient of the cost with respect to W (current layer l), same shape as W
@@ -49,20 +49,20 @@ def linear_activation_backward(dA: np.array, cache: Tuple, activation: str) -> T
 
 
 # 2.c
-def relu_backward(dA: np.array, activation_cache: np.array) -> np.array:
+def relu_backward(dA: np.ndarray, activation_cache: Dict) -> np.ndarray:
     """
     Compute backward propagation for a ReLU unit
     :param dA: the post-activation gradient
     :param activation_cache: contains Z (stored during the forward propagation)
     :return: dZ – gradient of the cost with respect to Z
     """
-    Z = activation_cache
-    dZ = np.where(Z > 0, np.ones_like(dA), np.zeros_like(dA))
+    Z = activation_cache["Z"]
+    dZ = np.where(Z > 0, dA, np.zeros_like(dA))
     return dZ
 
 
 # 2.d
-def softmax_backward(dA: np.array, activation_cache: np.array) -> np.array:
+def softmax_backward(dA: np.ndarray, activation_cache: Dict) -> np.ndarray:
     """
     Compute backward propagation for a ReLU unit
     :param dA: the post-activation gradient
@@ -74,7 +74,7 @@ def softmax_backward(dA: np.array, activation_cache: np.array) -> np.array:
 
 
 # 2.e
-def L_model_backward(AL: np.array, Y: np.array, caches: List) -> Dict[str, Any]:
+def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches: List) -> Dict[str, Any]:
     """
     Computes the backward propagation process for the entire network.
     The backpropagation for the softmax function should be done only once, as only the output layers
@@ -92,12 +92,13 @@ def L_model_backward(AL: np.array, Y: np.array, caches: List) -> Dict[str, Any]:
 
     for l in reversed(range(n_layers)):
         current_cache = caches[l]
+        current_cache[-1] = {"Z": current_cache[-1]}
         if l == n_layers - 1:
-            current_cache.update({"Y": Y})
+            current_cache[-1].update({"Y": Y})
             dA_prev, dW, db = linear_activation_backward(AL, current_cache, "softmax")
         else:
             dA = dA_prev
-            dA_prev, dW, db = linear_activation_backward(dA, current_cache, 'relu')
+            dA_prev, dW, db = linear_activation_backward(dA, current_cache, "relu")
 
         grads["dA" + str(l)] = dA_prev
         grads["dw" + str(l)] = dW
@@ -117,9 +118,9 @@ def update_parameters(parameters: Dict, grads: Dict, learning_rate: float) -> Di
     """
     for layer, (layer_weights, layer_biases) in parameters.items():
         # Update weights
-        parameters[layer][0] = layer_weights - learning_rate * grads["dw" + str(layer - 1)]
+        parameters[layer][0] = layer_weights - learning_rate * grads["dw" + layer.split('_')[-1]]
         # Update biases
-        parameters[layer][1] = layer_biases - learning_rate * grads["db" + str(layer - 1)]
+        parameters[layer][1] = layer_biases - learning_rate * grads["db" + layer.split('_')[-1]]
     return parameters
 
 
