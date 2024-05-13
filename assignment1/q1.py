@@ -11,7 +11,7 @@ EPSILON = 1e-6
 
 
 # 1.a
-def initialize_parameters(layer_dims: np.array) -> Dict[str, Tuple[np.ndarray, np.array]]:
+def initialize_parameters(layer_dims: List) -> Dict[str, Tuple[np.ndarray, np.array]]:
     """
     :param layer_dims:  an array of the dimensions of each layer in the network
                         (layer 0 is the size of the flattened input, layer L is the output softmax)
