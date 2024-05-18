@@ -28,7 +28,7 @@ def main():
                                                             learning_rate=0.009,  # Use a learning rate of 0.009
                                                             num_iterations=100000,
                                                             batch_size=32,
-                                                            use_batchnorm=True,    # Activate the batchnorm option at this point
+                                                            use_batchnorm=False,
                                                             l2_regularization=True
                                                         )
     end_time = timeit.default_timer()
