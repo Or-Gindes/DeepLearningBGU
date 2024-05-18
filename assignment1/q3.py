@@ -20,7 +20,8 @@ def L_layer_model(
         learning_rate: float,
         num_iterations: int,
         batch_size: int = 32,
-        use_batchnorm: bool = False
+        use_batchnorm: bool = False,
+        l2_regularization: bool = False
 ):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
@@ -36,6 +37,7 @@ def L_layer_model(
     :param num_iterations: The number of training iterations to perform
     :param batch_size: the number of examples in a single training batch
     :param use_batchnorm: boolean - indicates if batch normalization should be used
+    :param l2_regularization: boolean - indicates if l2 regularization should be used
     :return: parameters – the parameters learnt by the system during the training
                 (the same parameters that were updated in the update_parameters function).
     :return: costs – the values of the cost function (calculated by the compute_cost function).
@@ -64,11 +66,11 @@ def L_layer_model(
             X_batch, Y_batch = X_train[:, batch_start: batch_end], Y_train[:, batch_start: batch_end]
 
             AL, caches = L_model_forward(X_batch, parameters, use_batchnorm=use_batchnorm)
-            grads = L_model_backward(AL, Y_batch, caches)
+            grads = L_model_backward(AL, Y_batch, caches, l2_regularization)
             parameters = update_parameters(parameters, grads, learning_rate)
 
             if i % 100 == 0:
-                cost = compute_cost(AL, Y_batch)
+                cost = compute_cost(AL, Y_batch, parameters, l2_regularization)
                 costs.append(cost)
                 train_accuracy = Predict(X_train, Y_train, parameters, use_batchnorm)
                 val_accuracy = Predict(X_val, Y_val, parameters, use_batchnorm)

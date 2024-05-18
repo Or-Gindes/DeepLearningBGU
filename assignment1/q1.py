@@ -117,7 +117,7 @@ def compute_cost(AL: np.ndarray, Y: np.ndarray, parameters: Dict, l2_regularizat
     :param AL: probability vector corresponding to your label predictions, shape (num_of_classes, number of examples)
     :param Y: the labels vector (i.e. the ground truth)
     :param parameters: the W and b parameters of each layer
-    :param l2_regularization: whether to use l2 norm
+    :param l2_regularization: boolean - indicates if l2 regularization should be used
     :return: cost – the cross-entropy cost
     """
     n_examples = Y.shape[1]

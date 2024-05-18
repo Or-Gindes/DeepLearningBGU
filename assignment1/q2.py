@@ -15,7 +15,7 @@ def linear_backward(dZ: np.ndarray, cache: Tuple, l2_regularization: bool = Fals
     Computes the linear part of the backward propagation process of a single layer
     :param dZ: The gradient of the cost with respect to the linear output of the current layer
     :param cache: Tuple of values (A_prev, W, b) coming from the forward propagation in the current layer
-    :param l2_regularization: whether to use l2 norm
+    :param l2_regularization: boolean - indicates if l2 regularization should be used
     :return: dA_prev - Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
     :return: dW - Gradient of the cost with respect to W (current layer l), same shape as W
     :return: db - Gradient of the cost with respect to b (current layer l), same shape as b
@@ -36,7 +36,7 @@ def linear_activation_backward(dA: np.ndarray, cache: Tuple, activation: str, l2
     :param dA: post activation gradient of the current layer
     :param cache:  cache contains both the linear and the activations cache
     :param activation: The activation function to be used (a string, either “softmax” or “relu”)
-    :param l2_regularization: whether to use l2 norm
+    :param l2_regularization: boolean - indicates if l2 regularization should be used
     :return: dA_prev – Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
     :return: dW – Gradient of the cost with respect to W (current layer l), same shape as W
     :return: db – Gradient of the cost with respect to b (current layer l), same shape as b
@@ -87,7 +87,7 @@ def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches: List, l2_regularizat
     :param AL: the probabilities vector, the output of the forward propagation (L_model_forward)
     :param Y: the true labels vector (the "ground truth" - true classifications)
     :param caches: list of caches containing for each layer: a) the linear cache; b) the activation cache
-    :param l2_regularization: whether to use l2 norm
+    :param l2_regularization: boolean - indicates if l2 regularization should be used
     :return: Grads - a dictionary with the gradients
              grads["dA" + str(l)] = ...
              grads["dW" + str(l)] = ...
