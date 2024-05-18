@@ -1,6 +1,6 @@
 """
 DeepLearning Assignment1 - Implementation of a simple neural network “from scratch”
-Authors: Or Gindes & XXXX
+Authors: Or Gindes & Roei Zaady
 """
 from typing import List, Dict
 import numpy as np

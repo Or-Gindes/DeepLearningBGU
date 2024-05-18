@@ -1,37 +1,42 @@
 """
 DeepLearning Assignment1 - Implementation of a simple neural network “from scratch”
-Authors: Or Gindes & XXXX
+Authors: Or Gindes & Roei Zaady
 """
 import numpy as np
 from typing import Tuple, List, Dict, Any
 
+np.random.seed(1)
+EPSILON = 1e-6
+
 
 # 2.a
-def linear_backward(dZ: np.ndarray, cache: Tuple) -> Tuple:
+def linear_backward(dZ: np.ndarray, cache: Tuple, l2_regularization: bool = False) -> Tuple:
     """
     Computes the linear part of the backward propagation process of a single layer
     :param dZ: The gradient of the cost with respect to the linear output of the current layer
     :param cache: Tuple of values (A_prev, W, b) coming from the forward propagation in the current layer
+    :param l2_regularization: whether to use l2 norm
     :return: dA_prev - Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
     :return: dW - Gradient of the cost with respect to W (current layer l), same shape as W
     :return: db - Gradient of the cost with respect to b (current layer l), same shape as b
     """
     A_prev, W, b = cache
     m = A_prev.shape[1]
-    dW = 1 / m * np.dot(dZ, A_prev.T)
+    dW = 1 / m * np.dot(dZ, A_prev.T) + ((EPSILON / m) * W if ~l2_regularization else 0) # not sure about dividing with m
     db = 1 / m * np.sum(dZ, axis=1, keepdims=True)
     dA_prev = np.dot(W.T, dZ)
     return dA_prev, dW, db
 
 
 # 2.b
-def linear_activation_backward(dA: np.ndarray, cache: Tuple, activation: str) -> Tuple:
+def linear_activation_backward(dA: np.ndarray, cache: Tuple, activation: str, l2_regularization: bool = False) -> Tuple:
     """
     Compute the backward propagation for the LINEAR->ACTIVATION layer.
     The function first computes dZ and then applies the linear_backward function
     :param dA: post activation gradient of the current layer
     :param cache:  cache contains both the linear and the activations cache
     :param activation: The activation function to be used (a string, either “softmax” or “relu”)
+    :param l2_regularization: whether to use l2 norm
     :return: dA_prev – Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
     :return: dW – Gradient of the cost with respect to W (current layer l), same shape as W
     :return: db – Gradient of the cost with respect to b (current layer l), same shape as b
@@ -44,7 +49,7 @@ def linear_activation_backward(dA: np.ndarray, cache: Tuple, activation: str) ->
     else:
         raise ValueError(f"activation {activation} isn't implemented")
     dZ = back_activation(dA, activation_cache)
-    dA_prev, dW, db = linear_backward(dZ, linear_cache)
+    dA_prev, dW, db = linear_backward(dZ, linear_cache, l2_regularization)
     return dA_prev, dW, db
 
 
@@ -74,7 +79,7 @@ def softmax_backward(dA: np.ndarray, activation_cache: Dict) -> np.ndarray:
 
 
 # 2.e
-def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches: List) -> Dict[str, Any]:
+def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches: List, l2_regularization: bool = False) -> Dict[str, Any]:
     """
     Computes the backward propagation process for the entire network.
     The backpropagation for the softmax function should be done only once, as only the output layers
@@ -82,6 +87,7 @@ def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches: List) -> Dict[str, A
     :param AL: the probabilities vector, the output of the forward propagation (L_model_forward)
     :param Y: the true labels vector (the "ground truth" - true classifications)
     :param caches: list of caches containing for each layer: a) the linear cache; b) the activation cache
+    :param l2_regularization: whether to use l2 norm
     :return: Grads - a dictionary with the gradients
              grads["dA" + str(l)] = ...
              grads["dW" + str(l)] = ...
@@ -95,10 +101,10 @@ def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches: List) -> Dict[str, A
         current_cache[-1] = {"Z": current_cache[-1]}
         if l == n_layers - 1:
             current_cache[-1].update({"Y": Y})
-            dA_prev, dW, db = linear_activation_backward(AL, current_cache, "softmax")
+            dA_prev, dW, db = linear_activation_backward(AL, current_cache, "softmax", l2_regularization)
         else:
             dA = dA_prev
-            dA_prev, dW, db = linear_activation_backward(dA, current_cache, "relu")
+            dA_prev, dW, db = linear_activation_backward(dA, current_cache, "relu", l2_regularization)
 
         grads["dA" + str(l)] = dA_prev
         grads["dw" + str(l)] = dW
@@ -107,7 +113,7 @@ def L_model_backward(AL: np.ndarray, Y: np.ndarray, caches: List) -> Dict[str, A
     return grads
 
 
-# 1.f
+# 2.f
 def update_parameters(parameters: Dict, grads: Dict, learning_rate: float) -> Dict:
     """
     Updates parameters using gradient descent

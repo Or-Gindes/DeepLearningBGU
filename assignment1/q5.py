@@ -2,47 +2,22 @@
 DeepLearning Assignment1 - Implementation of a simple neural network “from scratch”
 Authors: Or Gindes & Roei Zaady
 """
+
 import os
 import timeit
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
+from q4 import get_mnist
 from q3 import L_layer_model, Predict
 
 os.environ["KERAS_BACKEND"] = "torch"
-from keras_core.datasets import mnist
 
 np.random.seed(0)
-
-# 4.a
-def get_mnist():
-    """
-    Get MNIST data and preprocess input
-    :return: X,y for train and test sets
-    """
-    # Load dataset
-    (x_train_val, y_train_val), (x_test, y_test) = mnist.load_data()
-    # normalize dataset by 255 (max value)
-    x_train_val = x_train_val / 255.0
-    x_test = x_test / 255.0
-
-    # Flatten the input of train_val and test sets
-    img_h, img_w = x_train_val.shape[1], x_train_val.shape[2]
-    x_train = x_train_val.reshape((x_train_val.shape[0], img_h * img_w), order='F').T
-    x_test = x_test.reshape((x_test.shape[0], img_h * img_w), order='F').T
-
-    # Apply onehot encoding to y
-    onehot = OneHotEncoder(sparse_output=False)
-    y_train = onehot.fit_transform(y_train_val.reshape(-1, 1)).T
-    y_test = onehot.transform(y_test.reshape(-1, 1)).T
-
-    return x_train, x_test, y_train, y_test
-
 def main():
     x_train, x_test, y_train, y_test = get_mnist()
-
     input_dim = x_train.shape[0]
 
-    # Q4.b Batch Normalization = False
+    # Q4.b Batch Normalization = True
     layer_dims = [input_dim, 20, 7, 5, 10]  # 4 layers (aside from the input layer), with the following sizes: 20,7,5,10
 
     start_time_train = timeit.default_timer()
@@ -53,7 +28,7 @@ def main():
                                                             learning_rate=0.009,  # Use a learning rate of 0.009
                                                             num_iterations=100000,
                                                             batch_size=32,
-                                                            use_batchnorm=False    # Do not activate the batchnorm option at this point
+                                                            use_batchnorm=True    # Activate the batchnorm option at this point
                                                         )
     end_time = timeit.default_timer()
     elapsed_time = end_time - start_time_train
@@ -65,7 +40,7 @@ def main():
             X=x_test,
             Y=y_test,
             parameters=parameters,
-            use_batchnorm=False))
+            use_batchnorm=True))
     end_time = timeit.default_timer()
     elapsed_time = end_time - start_time_test
 

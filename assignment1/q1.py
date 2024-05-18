@@ -1,10 +1,9 @@
 """
 DeepLearning Assignment1 - Implementation of a simple neural network “from scratch”
-Authors: Or Gindes & XXXX
+Authors: Or Gindes & Roei Zaady
 """
 import numpy as np
 from typing import Dict, Tuple, List
-
 
 np.random.seed(1)
 EPSILON = 1e-6
@@ -112,15 +111,23 @@ def L_model_forward(X: np.ndarray, parameters: Dict, use_batchnorm: bool) -> Tup
 
 
 # 1.g
-def compute_cost(AL: np.ndarray, Y: np.ndarray) -> float:
+def compute_cost(AL: np.ndarray, Y: np.ndarray, parameters: Dict, l2_regularization: bool = False) -> float:
     """
     Compute cost function categorical cross-entropy loss
     :param AL: probability vector corresponding to your label predictions, shape (num_of_classes, number of examples)
     :param Y: the labels vector (i.e. the ground truth)
+    :param parameters: the W and b parameters of each layer
+    :param l2_regularization: whether to use l2 norm
     :return: cost – the cross-entropy cost
     """
     n_examples = Y.shape[1]
     cost = -1 / n_examples * sum(np.sum(np.multiply(Y, np.log(AL + EPSILON)), axis=0))
+
+    # l2 Norm
+    if l2_regularization:
+        l2_cost = sum([np.sum(np.square(layer[0])) for layer in parameters.values()])
+        l2_cost = (EPSILON/2)*l2_cost
+        cost += l2_cost
     return cost
 
 
