@@ -137,6 +137,7 @@ def apply_batchnorm(A: np.ndarray) -> np.ndarray:
     Performs batchnorm on the received activation values of a given layer
     :param A: The activation values of a given layer
     :return: NA - the normalized activation values, based on the formula learned in class
+
     """
     NA = (A - np.mean(A)) / (np.std(A) + EPSILON)
     return NA

@@ -9,6 +9,8 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 from q4 import get_mnist
 from q3 import L_layer_model, Predict
+import matplotlib.pyplot as plt
+import pandas as pd
 
 os.environ["KERAS_BACKEND"] = "torch"
 
@@ -41,11 +43,32 @@ def main():
             X=x_test,
             Y=y_test,
             parameters=parameters,
-            use_batchnorm=True))
+            use_batchnorm=False))
     end_time = timeit.default_timer()
     elapsed_time = end_time - start_time_test
 
     print('Test duration: ', str(round(elapsed_time, 3)), '\nTotal duration: ', str(round(end_time - start_time_train, 3)))
+
+    n_layers = len(layer_dims) - 1
+    fig, axes = plt.subplots(1, n_layers, figsize=(20, 5))
+    fig.suptitle('Distribution of Weight Size by Layer - Without L2 Regularization')
+
+    weights_mse = []
+    for i in range(n_layers):
+        layer = f'layer_{i}'
+        weights = parameters[layer][0].flatten()
+        weights_mse.append(np.mean(np.square(weights)))
+        ax = axes[i]  # plot weight by layer
+        ax.hist(weights, bins=30, edgecolor='black')
+        ax.set_title(f'Layer {i + 1} Weights')
+        ax.set_xlabel('Weight Value')
+        ax.set_ylabel('Frequency')
+
+    plt.tight_layout()
+    plt.show()
+
+    print(pd.DataFrame({'layer': np.arange(n_layers) + 1, 'mse': weights_mse}))
+
 
 if __name__ == "__main__":
    main()

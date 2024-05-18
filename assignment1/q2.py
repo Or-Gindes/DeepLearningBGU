@@ -22,7 +22,7 @@ def linear_backward(dZ: np.ndarray, cache: Tuple, l2_regularization: bool = Fals
     """
     A_prev, W, b = cache
     m = A_prev.shape[1]
-    dW = 1 / m * np.dot(dZ, A_prev.T) + ((EPSILON / m) * W if ~l2_regularization else 0) # not sure about dividing with m
+    dW = 1 / m * np.dot(dZ, A_prev.T) + ((EPSILON / m) * W if l2_regularization else 0)  # not sure about dividing with m
     db = 1 / m * np.sum(dZ, axis=1, keepdims=True)
     dA_prev = np.dot(W.T, dZ)
     return dA_prev, dW, db
