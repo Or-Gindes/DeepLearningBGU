@@ -8,8 +8,8 @@ from sklearn.model_selection import train_test_split
 from q1 import initialize_parameters, L_model_forward, compute_cost
 from q2 import L_model_backward, update_parameters
 
-np.random.seed(0)
-EPSILON = 1e-4
+np.random.seed(2)
+EPSILON = 1e-6
 
 
 # 3.a
@@ -19,7 +19,7 @@ def L_layer_model(
         layer_dims: List,
         learning_rate: float,
         num_iterations: int,
-        batch_size: int = 32,
+        batch_size: int = 128,
         use_batchnorm: bool = False,
         l2_regularization: bool = False
 ):
@@ -57,7 +57,7 @@ def L_layer_model(
     # Training loop
     num_examples = X_train.shape[1]
     i = 0  # iteration counter
-    patience, patience_counter = 5, 0
+    patience, patience_counter = 20, 0
     epoch_counter = 1
     best_validation_accuracy = 0
     while i < num_iterations:

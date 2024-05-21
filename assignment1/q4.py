@@ -13,7 +13,7 @@ import pandas as pd
 os.environ["KERAS_BACKEND"] = "torch"
 from keras_core.datasets import mnist
 
-np.random.seed(0)
+np.random.seed(2)
 
 
 # 4.a
@@ -56,7 +56,7 @@ def main():
         layer_dims=layer_dims,
         learning_rate=0.009,  # Use a learning rate of 0.009
         num_iterations=100000,
-        batch_size=32,
+        batch_size=64,
         use_batchnorm=False  # Do not activate the batchnorm option at this point
     )
     end_time = timeit.default_timer()
@@ -87,6 +87,20 @@ def main():
         weights_means.append(np.mean(np.square(weights)))
         ax = axes[i]  # plot weight by layer
         ax.hist(weights, bins=30, edgecolor='black')
+        if i == 0:
+            x = (-0.7, 0.7)
+            y = (0, 2100)
+        elif i == 1:
+            x = (-1.5, 1.5)
+            y = (0, 21)
+        elif i == 2:
+            x = (-1.5, 3)
+            y = (0, 7.5)
+        else:
+            x = (-2.5, 1.75)
+            y = (0, 8)
+        ax.set_xlim(x),
+        ax.set_ylim(y),
         ax.set_title(f'Layer {i + 1} Weights')
         ax.set_xlabel('Weight Value')
         ax.set_ylabel('Frequency')

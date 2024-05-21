@@ -5,7 +5,7 @@ Authors: Or Gindes & Roei Zaady
 import numpy as np
 from typing import Dict, Tuple, List
 
-np.random.seed(1)
+np.random.seed(2)
 EPSILON = 1e-6
 
 
@@ -126,7 +126,7 @@ def compute_cost(AL: np.ndarray, Y: np.ndarray, parameters: Dict, l2_regularizat
     # l2 Norm
     if l2_regularization:
         l2_cost = sum([np.sum(np.square(layer[0])) for layer in parameters.values()])
-        l2_cost = (EPSILON / 2) * l2_cost
+        l2_cost = (EPSILON / (2 * n_examples)) * l2_cost
         cost += l2_cost
     return cost
 
@@ -139,5 +139,5 @@ def apply_batchnorm(A: np.ndarray) -> np.ndarray:
     :return: NA - the normalized activation values, based on the formula learned in class
 
     """
-    NA = (A - np.mean(A)) / (np.std(A) + EPSILON)
+    NA = (A - np.mean(A)) / np.sqrt(np.var(A) + EPSILON)
     return NA

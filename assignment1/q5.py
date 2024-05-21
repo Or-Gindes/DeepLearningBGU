@@ -6,13 +6,14 @@ Authors: Or Gindes & Roei Zaady
 import os
 import timeit
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
+import pandas as pd
 from q4 import get_mnist
 from q3 import L_layer_model, Predict
+import matplotlib.pyplot as plt
 
 os.environ["KERAS_BACKEND"] = "torch"
 
-np.random.seed(0)
+np.random.seed(2)
 
 
 def main():
@@ -28,8 +29,8 @@ def main():
         Y=y_train,
         layer_dims=layer_dims,
         learning_rate=0.009,  # Use a learning rate of 0.009
-        num_iterations=100000,
-        batch_size=32,
+        num_iterations=1000000,
+        batch_size=256,
         use_batchnorm=True  # Activate the batchnorm option at this point
     )
     end_time = timeit.default_timer()
@@ -48,7 +49,6 @@ def main():
 
     print('Test duration: ', str(round(elapsed_time, 3)), '\nTotal duration: ',
           str(round(end_time - start_time_train, 3)))
-
 
 if __name__ == "__main__":
     main()
