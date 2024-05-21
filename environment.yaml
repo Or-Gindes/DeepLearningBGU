@@ -11,5 +11,6 @@ dependencies:
   - matplotlib
   - scikit-learn
   - keras-core
+  - pandas
   - pip:
       - ruff  # dev
