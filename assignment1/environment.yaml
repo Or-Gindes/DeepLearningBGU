@@ -1,0 +1,16 @@
+name: deep_learning_env
+channels:
+  - defaults
+  - nvidia
+  - pytorch
+dependencies:
+  - python>=3.10,<3.11
+  - pip
+  - numpy
+  - pytorch
+  - matplotlib
+  - scikit-learn
+  - keras-core
+  - pandas
+  - pip:
+      - ruff  # dev
