@@ -13,19 +13,23 @@ device = (
     if torch.cuda.is_available()
     else "cpu"
 )
+l2_lambda = 0.01
 
 
 class SiameseNetwork(nn.Module):
     def __init__(self):
         super(SiameseNetwork, self).__init__()
         # Convolutional layers
-        self.layer1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=9, stride=1, padding_mode='valid')
-        self.layer2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=8, stride=1, padding_mode='valid'),
+        self.layer1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=10, stride=1, padding_mode='valid')
+        self.layer2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=7, stride=1, padding_mode='valid'),
         self.layer3 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=4, stride=1, padding_mode='valid'),
         self.layer4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=1, padding_mode='valid'),
-
+        # self.layer1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=9, stride=1, padding_mode='valid')
+        # self.layer2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=8, stride=1, padding_mode='valid'),
+        # self.layer3 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=4, stride=1, padding_mode='valid'),
+        # self.layer4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=1, padding_mode='valid'),
         # Dense/Linear layers
-        self.layer5 = nn.Linear(24 * 24 * 256, 4096),
+        self.layer5 = nn.Linear(6 * 6 * 256, 4096),  # nn.Linear(24 * 24 * 256, 4096),
         self.layer6 = nn.Linear(4096, 1),
 
         # Pooling and Activation layers
@@ -34,6 +38,7 @@ class SiameseNetwork(nn.Module):
         self.relu = nn.ReLU(),
         self.sigmoid = nn.Sigmoid()
 
+        # Initialize layers' weights and biases
         self.apply(self.initialize_weights)
 
 
@@ -67,6 +72,16 @@ class SiameseNetwork(nn.Module):
         return self.sigmoid(self.layer6(l1_distance))
 
 
-    def train(self, x, x2) -> torch.Torch:
-        pass
+    def train(self, train_dataloader) -> torch.Tensor:
+        while (() and ()):
+            for x1, x2, label in train_dataloader:
+                x1, x2, label = x1.to(device), x2.to(device), label.to(device)
+
+                optimizer.zero_grad()
+
+                prediction = self.forward(x1, x2)
+                loss = label * torch.log(prediction) + (1 - label) * (1 - torch.log(prediction))
+                # + l2_lambda * torch.square(W) #What is this l2 regularization - what is W?
+
+
 
