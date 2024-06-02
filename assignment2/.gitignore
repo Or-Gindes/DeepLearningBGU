@@ -1,0 +1,6 @@
+# Ignore the .idea directory
+.idea/
+
+# Ignore __pycache__ directories in assignment1 and assignment2
+assignment1/__pycache__/
+assignment2/__pycache__/

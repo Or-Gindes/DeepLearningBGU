@@ -1,11 +1,5 @@
 import os
-import numpy as np
-import torch
-from torch import nn
-from torch.utils.data import DataLoader, Dataset
-from torchvision import datasets, transforms
-from PIL import Image
-import random
+from PIL.Image import Image
 from PIL import Image
 
 
@@ -13,13 +7,12 @@ class PrepareDataset:
     def __init__(self, directory: str):
         self.directory = directory
         self.image_dict = {}
-        self.transform = transforms.Compose([
-            transforms.Resize((150, 150)),
-            transforms.ToTensor()]
-        )
         self.scan_dataset()
 
     def scan_dataset(self):
+        """
+        scans through all available files, creates a full dataset to be used to create a validation dataset
+        """
         # Iterate through each directory in the base folder
         for person_name in os.listdir(self.directory):
             person_name_folder = os.path.join(self.directory, person_name)
@@ -37,25 +30,43 @@ class PrepareDataset:
                 # Add the list of image files to the dictionary
                 self.image_dict[person_name] = images
 
-    def load_dataset(self, file):
+    def load_dataset(self, file_path: str) -> tuple[list[tuple[Image, Image]], list[int]]:
+        """
+        reads a txt file with predefined pairs and creates a dataset as a dataloader object.
+        :param file_path: string path to txt file with the desired pairs in the dataset
+        :return: DataLoader
+        """
         image_pairs = []
         labels = []
-        with open(file, 'r') as f:
+        with open(file_path, 'r') as f:
             rows = f.readlines()
-            num_samples = int(rows[0].strip())
+            num_samples = len(rows)
             i = 1
             while i < num_samples:
+                if i == 1900:
+                    pass
                 row_segments = rows[i].strip().split()
                 if len(row_segments) == 3:
                     person = row_segments[0]
-                    image1 = Image.open(self.image_dict[person][int(row_segments[1])-1])
-                    image2 = Image.open(self.image_dict[person][int(row_segments[2])-1])
+
+                    image1 = Image.open(os.path.join(self.directory,
+                                                     person,
+                                                     self.image_dict[person][int(row_segments[1]) - 1]))
+                    image2 = Image.open(os.path.join(self.directory,
+                                                     person,
+                                                     self.image_dict[person][int(row_segments[2]) - 1]))
                     labels.append(1)
                 else:
                     person1 = row_segments[0]
-                    image1 = Image.open(self.image_dict[person1][int(row_segments[1]) - 1])
+                    image1 = Image.open(os.path.join(self.directory,
+                                                     person1,
+                                                     self.image_dict[person1][int(row_segments[1]) - 1]))
                     person2 = row_segments[2]
-                    image2 = Image.open(self.image_dict[person2][int(row_segments[3]) - 1])
+                    image2 = Image.open(os.path.join(self.directory,
+                                                     person2,
+                                                     self.image_dict[person2][int(row_segments[3]) - 1]))
                     labels.append(0)
 
-                image_pairs.append([image1, image2])
+                image_pairs.append((image1, image2))
+                i += 1
+        return image_pairs, labels
