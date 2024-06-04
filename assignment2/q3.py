@@ -32,6 +32,7 @@ def main():
                    epoch=5,
                    learning_rate=.01)
     pass
+
     # transform = transforms.Compose([transforms.Resize((105, 105)), transforms.ToTensor()])
     # folder_dataset = datasets.ImageFolder(root='path_to_your_data')
     # siamese_dataset = SiameseDataset(imageFolderDataset=folder_dataset, transform=transform)
