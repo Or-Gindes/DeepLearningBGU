@@ -6,10 +6,8 @@ Authors: Or Gindes & Roei Zaady
 import os
 import timeit
 import numpy as np
-import pandas as pd
 from q4 import get_mnist
 from q3 import L_layer_model, Predict
-import matplotlib.pyplot as plt
 
 os.environ["KERAS_BACKEND"] = "torch"
 

@@ -1,5 +1,4 @@
 import os
-from PIL.Image import Image
 from PIL import Image
 
 
@@ -30,7 +29,7 @@ class PrepareDataset:
                 # Add the list of image files to the dictionary
                 self.image_dict[person_name] = images
 
-    def load_dataset(self, file_path: str):# -> tuple[list[tuple[Image, Image]], list[int]]:
+    def load_dataset(self, file_path: str):  # -> tuple[list[tuple[Image, Image]], list[int]]:
         """
         reads a txt file with predefined pairs and creates a dataset as a dataloader object.
         :param file_path: string path to txt file with the desired pairs in the dataset

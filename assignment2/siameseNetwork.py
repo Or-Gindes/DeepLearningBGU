@@ -32,13 +32,13 @@ class SiameseNetwork(nn.Module):
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
 
-        # Initialize layers' weights and biases
+        # Initialize layer weights and biases
         self.apply(self.initialize_weights)
 
-
-    def initialize_weights(self, l):
+    @staticmethod
+    def initialize_weights(l):
         """
-        Initializes the model's layers' weights
+        Initializes the model layer weights
         """
         # Initialize layers as appears in the article
         # Conv2D
@@ -49,7 +49,6 @@ class SiameseNetwork(nn.Module):
         if isinstance(l, nn.Linear):
             torch.nn.init.normal_(l.weight, mean=0, std=2 * 0.1)
             torch.nn.init.normal_(l.bias, mean=0.5, std=0.01)
-
 
     def separated_forward(self, x: np.ndarray) -> torch.Tensor:
         """
@@ -79,7 +78,13 @@ class SiameseNetwork(nn.Module):
         l2 = sum(torch.sum(torch.square(weights)) for weights in self.parameters())
         return torch.mean(-1 * cross_entropy_loss) + l2_lambda * l2
 
-    def train_model(self, train_dataloader: DataLoader, validation_dataloader: DataLoader, epoch: int, learning_rate: float) -> torch.Tensor:
+    def train_model(
+            self,
+            train_dataloader: DataLoader,
+            validation_dataloader: DataLoader,
+            epoch: int,
+            learning_rate: float
+    ):
         self.train()
         i = 0
         train_loss = 0.

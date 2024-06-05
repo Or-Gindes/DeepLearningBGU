@@ -1,12 +1,13 @@
-from prepareDataset import *
+import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from prepareDataset import *
-from torchDataloader import *
-from siameseNetwork import *
-device = ("cuda" if torch.cuda.is_available() else "cpu")
+from prepareDataset import PrepareDataset
+from torchDataloader import FacesDataLoader
+from siameseNetwork import SiameseNetwork
+
 
 def main():
+    device = ("cuda" if torch.cuda.is_available() else "cpu")
     ds = PrepareDataset(directory='./lfw2')
     train_image_pairs, train_labels = ds.load_dataset(file_path=r'./pairsDevTrain.txt')
 
@@ -27,10 +28,12 @@ def main():
     validation_dataloader = DataLoader(validation_dataset, batch_size=5, shuffle=True)
 
     model = SiameseNetwork().to(device)
-    model.train_model(train_dataloader=train_dataloader,
-                   validation_dataloader=validation_dataloader,
-                   epoch=5,
-                   learning_rate=.01)
+    model.train_model(
+        train_dataloader=train_dataloader,
+        validation_dataloader=validation_dataloader,
+        epoch=5,
+        learning_rate=.01
+    )
     pass
 
     # transform = transforms.Compose([transforms.Resize((105, 105)), transforms.ToTensor()])
