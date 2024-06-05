@@ -1,3 +1,4 @@
+import os
 import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -6,9 +7,12 @@ from torchDataloader import FacesDataLoader
 from siameseNetwork import SiameseNetwork
 
 
+DATASET_FOLDER = "lfw2"
+
+
 def main():
     device = ("cuda" if torch.cuda.is_available() else "cpu")
-    ds = PrepareDataset(directory='./lfw2')
+    ds = PrepareDataset(directory=os.path.join(os.getcwd(), DATASET_FOLDER))
     train_image_pairs, train_labels = ds.load_dataset(file_path=r'./pairsDevTrain.txt')
 
     train_dataset = FacesDataLoader(images=train_image_pairs,
