@@ -16,7 +16,6 @@ class PrepareDataset:
         for person_name in os.listdir(self.directory):
             person_name_folder = os.path.join(self.directory, person_name)
 
-            #
             if os.path.isdir(person_name_folder):
                 images = []
 
