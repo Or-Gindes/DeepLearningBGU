@@ -3,11 +3,12 @@ import numpy as np
 from torch import nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from sklearn.metrics import roc_auc_score
 
-np.random.seed(0)
-torch.manual_seed(0)
+np.random.seed(1)
+torch.manual_seed(1)
 device = ("cuda" if torch.cuda.is_available() else "cpu")
-l2_lambda = 0.01
+l2_lambda = 0.00001
 
 
 class SiameseNetwork(nn.Module):
@@ -18,10 +19,7 @@ class SiameseNetwork(nn.Module):
         self.layer2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=7, stride=1)
         self.layer3 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=4, stride=1)
         self.layer4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=1)
-        # self.layer1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=9, stride=1, padding_mode='valid')
-        # self.layer2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=8, stride=1, padding_mode='valid'),
-        # self.layer3 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=4, stride=1, padding_mode='valid'),
-        # self.layer4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=1, padding_mode='valid'),
+        
         # Dense/Linear layers
         self.layer5 = nn.Linear(6 * 6 * 256, 4096)  # nn.Linear(24 * 24 * 256, 4096),
         self.layer6 = nn.Linear(4096, 1)
@@ -35,20 +33,20 @@ class SiameseNetwork(nn.Module):
         # Initialize layers' weights and biases
         self.apply(self.initialize_weights)
 
-
     def initialize_weights(self, l):
         """
         Initializes the model's layers' weights
         """
         # Initialize layers as appears in the article
         # Conv2D
-        if isinstance(l, nn.Conv2d):
-            torch.nn.init.normal_(l.weight, mean=0, std=0.01)
-            torch.nn.init.normal_(l.bias, mean=0.5, std=0.01)
-        # Linear
-        if isinstance(l, nn.Linear):
-            torch.nn.init.normal_(l.weight, mean=0, std=2 * 0.1)
-            torch.nn.init.normal_(l.bias, mean=0.5, std=0.01)
+        with torch.no_grad():
+            if isinstance(l, nn.Conv2d):
+                torch.nn.init.trunc_normal_(l.weight, mean=0, std=0.01)
+                torch.nn.init.trunc_normal_(l.bias, mean=0.5, std=0.01)
+            # Linear
+            if isinstance(l, nn.Linear):
+                torch.nn.init.trunc_normal_(l.weight, mean=0, std=2 * 0.1)
+                torch.nn.init.trunc_normal_(l.bias, mean=0.5, std=0.01)
 
 
     def separated_forward(self, x: np.ndarray) -> torch.Tensor:
@@ -74,35 +72,58 @@ class SiameseNetwork(nn.Module):
         l1_distance = torch.abs(x1 - x2)
         return self.sigmoid(self.layer6(l1_distance))
 
-    def loss(self, prediction, label):
-        cross_entropy_loss = label * torch.log(prediction) + (1 - label) * torch.log(1 - prediction)
-        l2 = sum(torch.sum(torch.square(weights)) for weights in self.parameters())
-        return torch.mean(-1 * cross_entropy_loss) + l2_lambda * l2
-
-    def train_model(self, train_dataloader: DataLoader, validation_dataloader: DataLoader, epoch: int, learning_rate: float) -> torch.Tensor:
+    def loss(self, prediction, label) -> float:
+        cross_entropy_loss = nn.BCELoss()
+        return cross_entropy_loss(prediction, label) 
+        
+    def train_model(self, train_dataloader: DataLoader, validation_dataloader: DataLoader, epoch: int, optimizer: torch.optim) -> torch.Tensor:
         self.train()
         i = 0
-        train_loss = 0.
-        validation_loss = 0.
-        optimizer = optim.Adam(self.parameters(), lr=learning_rate)
+        lossCE = nn.BCELoss()
         while i < epoch:  # and ():
+            train_loss = 0.
+            train_accuracy = 0
+            train_predictions = []
+            train_labels = []
             for x1, x2, label in train_dataloader:
                 x1, x2, label = x1.to(device), x2.to(device), label.to(device)
+                prediction = self.forward(x1, x2).squeeze()
+                loss = lossCE(prediction, label.float())
                 optimizer.zero_grad()
-                prediction = self.forward(x1, x2)
-                loss = self.loss(prediction=prediction, label=label)
                 loss.backward()
                 optimizer.step()
                 train_loss += loss.item()
+                train_accuracy += torch.sum(torch.all(prediction >= 0.5) == label)
+                train_predictions.append(prediction.detach().cpu().numpy().squeeze())
+                train_labels.append(label.cpu().numpy().squeeze())
 
+            train_predictions = np.concatenate(train_predictions) # flatten train_predictions
+            train_labels = np.concatenate(train_labels) # flatten labels
             train_loss /= len(train_dataloader)
-            with torch.no_grad():
-                for x1, x2, label in validation_dataloader:
-                    x1, x2, label = x1.to(device), x2.to(device), label.to(device)
-                    validation_prediction = self.forward(x1, x2)
-                    loss = self.loss(validation_prediction, label)
-                    validation_loss += loss.item()
-
-                validation_loss /= len(validation_dataloader)
-                print(f'Epoch {i + 1}, Train Loss: {train_loss:.3f}, Val Loss: {validation_loss:.3f}')
+            train_accuracy =  roc_auc_score(train_labels, train_predictions)#train_accuracy/len(train_dataloader)
+            
+            
+            validation_loss, validation_accuracy = self.evaluate_model(validation_dataloader)
+            print(f'Epoch {i + 1}, Train Loss: {train_loss:.3f}, Train ROC-AUC: {train_accuracy:.3f}, Val Loss: {validation_loss:.3f}, Val ROC-AUC: {validation_accuracy:.3f}')
             i += 1
+
+    def evaluate_model(self, validation_dataloader: DataLoader):
+        self.eval()
+        loss = 0.
+        accuracy = 0
+        predictions = []
+        labels = []
+        with torch.no_grad():
+            for x1, x2, label in validation_dataloader:
+                x1, x2, label = x1.to(device), x2.to(device), label.to(device)
+                prediction = self.forward(x1, x2).squeeze()
+                loss += self.loss(prediction=prediction, label=label.float())
+                predictions.append(prediction.cpu().detach().numpy().squeeze())
+                labels.append(label.cpu().numpy().squeeze())
+        
+        predictions = np.concatenate(predictions)
+        labels = np.concatenate(labels)
+        loss /= len(validation_dataloader)
+        accuracy = roc_auc_score(labels, predictions)
+        
+        return loss, accuracy
