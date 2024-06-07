@@ -16,7 +16,7 @@ def main():
                                     transform=transforms.Compose([transforms.Resize((105, 105)),
                                                                   transforms.ToTensor()]))
 
-    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
 
     validation_image_pairs, validation_labels = ds.load_dataset(file_path=r'./pairsDevTest.txt')
 
@@ -25,16 +25,22 @@ def main():
                                          transform=transforms.Compose([transforms.Resize((105, 105)),
                                                                        transforms.ToTensor()]))
 
-    validation_dataloader = DataLoader(validation_dataset, batch_size=32, shuffle=True)
+    validation_dataloader = DataLoader(validation_dataset, batch_size=8, shuffle=True)
 
     model = SiameseNetwork().to(device)
     lr = 0.05
     optimizer = Adam(model.parameters(), lr=lr)
     lambda_ = lambda epoch: 0.99
     scheduler = lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lambda_)
-    model.train_model(train_dataloader=train_dataloader,
-                   validation_dataloader=validation_dataloader,
-                   epoch=50, optimizer=optimizer)
+    early_stopping = EarlyStopping(patience=20)
+    model.train_model(
+        train_dataloader=train_dataloader,
+        validation_dataloader=validation_dataloader,
+        epoch=200, 
+        optimizer=optimizer,
+        scheduler=scheduler,
+        early_stopping=early_stopping
+    )
     pass
 
     # transform = transforms.Compose([transforms.Resize((105, 105)), transforms.ToTensor()])
