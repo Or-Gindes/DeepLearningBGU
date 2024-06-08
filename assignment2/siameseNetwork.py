@@ -1,12 +1,8 @@
-from typing import Dict, List
-
 import torch
 import numpy as np
 from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score
-import time
-from tqdm import tqdm
 
 np.random.seed(1)
 torch.manual_seed(1)
@@ -19,15 +15,22 @@ class SiameseNetwork(nn.Module):
 
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=64, kernel_size=10),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
+            nn.Dropout(0.2),
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=7),
+            nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
+            nn.Dropout(0.2),
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=4),
+            nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
+            nn.Dropout(0.2),
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4),
+            nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
         )
         self.liner = nn.Sequential(nn.Linear(in_features=9216, out_features=4096), nn.Sigmoid())

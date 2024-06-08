@@ -10,7 +10,7 @@ from siameseNetwork import SiameseNetwork
 
 
 DATASET_FOLDER = "lfw2"
-LEARNING_RATE = 5e-3
+LEARNING_RATE = 1e-4
 BATCH_SIZE = 128
 EPOCHS = 200
 PATIENCE = 20
