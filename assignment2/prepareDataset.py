@@ -1,7 +1,5 @@
 import os
 from typing import Set, Any, Tuple, List
-
-from PIL.Image import Image
 from PIL import Image
 import pandas as pd
 import numpy as np
@@ -22,7 +20,6 @@ class PrepareDataset:
         for person_name in os.listdir(self.directory):
             person_name_folder = os.path.join(self.directory, person_name)
 
-            #
             if os.path.isdir(person_name_folder):
                 images = []
 

@@ -1,45 +1,57 @@
-from prepareDataset import *
+import os
+import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from torch.optim import Adam, lr_scheduler 
-from prepareDataset import *
-from torchDataloader import *
-from siameseNetwork import *
+from torch.optim import Adam, lr_scheduler
 from earlyStopping import EarlyStopping
+from prepareDataset import PrepareDataset
+from torchDataloader import FacesDataLoader
+from siameseNetwork import SiameseNetwork
 
-device = ("cuda" if torch.cuda.is_available() else "cpu")
+
+DATASET_FOLDER = "lfw2"
+LEARNING_RATE = 5e-3
+BATCH_SIZE = 128
+EPOCHS = 200
+PATIENCE = 20
+LAMBDA = 0.99
+
 
 def main():
-    ds = PrepareDataset(directory='./lfw2')
-    train_image_pairs, train_labels, validation_image_pairs, validation_labels = ds.load_dataset(file_path=r'./pairsDevTrain.txt', mode='train')
+    ds = PrepareDataset(directory=os.path.join(os.getcwd(), DATASET_FOLDER))
+    train_image_pairs, train_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTrain.txt"))
+    train_dataset = FacesDataLoader(
+        images=train_image_pairs,
+        labels=train_labels,
+        transform=transforms.Compose([transforms.Resize((105, 105)), transforms.ToTensor()])
+    )
 
-    train_dataset = FacesDataLoader(images=train_image_pairs,
-                                    labels=train_labels,
-                                    transform=transforms.Compose([transforms.ToTensor()]))
+    train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
-    validation_dataset = FacesDataLoader(images=validation_image_pairs,
-                                         labels=validation_labels,
-                                         transform=transforms.Compose([transforms.ToTensor()]))
+    validation_image_pairs, validation_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTest.txt"))
 
-    validation_dataloader = DataLoader(validation_dataset, batch_size=32, shuffle=True)
+    validation_dataset = FacesDataLoader(
+        images=validation_image_pairs,
+        labels=validation_labels,
+        transform=transforms.Compose([transforms.Resize((105, 105)), transforms.ToTensor()])
+    )
 
-    test_image_pairs, test_labels = ds.load_dataset(file_path=r'./pairsDevTest.txt', mode='test')
+    validation_dataloader = DataLoader(validation_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-    test_dataloader = DataLoader(validation_dataset, batch_size=32, shuffle=True)
 
-    model = SiameseNetwork().to(device)
-    lr = 0.05
-    optimizer = Adam(model.parameters(), lr=lr)
-    lambda_ = lambda epoch: 0.99
+    model = SiameseNetwork()
+    optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
+    criterion = torch.nn.BCEWithLogitsLoss()
+    lambda_ = lambda epoch: LAMBDA
     scheduler = lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lambda_)
-    early_stopping = EarlyStopping(patience=20)
+    early_stopping = EarlyStopping(patience=PATIENCE)
     model.train_model(
         train_dataloader=train_dataloader,
         validation_dataloader=validation_dataloader,
-        epoch=200, 
+        epoch=EPOCHS,
         optimizer=optimizer,
+        loss_criterion=criterion,
         scheduler=scheduler,
         early_stopping=early_stopping
     )
