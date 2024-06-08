@@ -75,7 +75,7 @@ class PrepareDataset:
                         test_image_pairs.append((img1.copy(), img2.copy()))
                     i += 1
 
-                    return test_image_pairs, test_labels
+            return test_image_pairs, test_labels
 
         elif mode == 'train':
             people_in_validation = self.train_validation_split(file_path=file_path, ratio=0.1)
