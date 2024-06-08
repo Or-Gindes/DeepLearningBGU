@@ -2,12 +2,19 @@ import os
 import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
+from torch.optim import Adam, lr_scheduler
+from earlyStopping import EarlyStopping
 from prepareDataset import PrepareDataset
 from torchDataloader import FacesDataLoader
 from siameseNetwork import SiameseNetwork
 
 
 DATASET_FOLDER = "lfw2"
+LEARNING_RATE = 1e-3
+BATCH_SIZE = 32
+EPOCHS = 200
+PATIENCE = 20
+LAMBDA = 0.99
 
 
 def main():
@@ -21,7 +28,7 @@ def main():
         transform=transforms.Compose([transforms.Resize((105, 105)), transforms.ToTensor()])
     )
 
-    train_dataloader = DataLoader(train_dataset, batch_size=5, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
     validation_image_pairs, validation_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTest.txt"))
 
@@ -31,14 +38,20 @@ def main():
         transform=transforms.Compose([transforms.Resize((105, 105)), transforms.ToTensor()])
     )
 
-    validation_dataloader = DataLoader(validation_dataset, batch_size=5, shuffle=True)
+    validation_dataloader = DataLoader(validation_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
     model = SiameseNetwork().to(device)
+    optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
+    lambda_ = lambda epoch: LAMBDA
+    scheduler = lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lambda_)
+    early_stopping = EarlyStopping(patience=PATIENCE)
     model.train_model(
         train_dataloader=train_dataloader,
         validation_dataloader=validation_dataloader,
-        epoch=5,
-        learning_rate=.01
+        epoch=EPOCHS,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        early_stopping=early_stopping
     )
     pass
 
