@@ -87,5 +87,6 @@ def main():
     test_loss, test_auc = model.evaluate_model(test_dataloader, criterion)
     print(f"Test loss: {test_loss:.3f} | Test Auc: {test_auc:.3f}")
 
+
 if __name__ == "__main__":
     main()

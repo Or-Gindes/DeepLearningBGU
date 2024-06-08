@@ -113,7 +113,7 @@ class SiameseNetwork(nn.Module):
 
             # Store training history
             train_losses.append(train_loss.cpu())
-            validation_losses.append(validation_loss)
+            validation_losses.append(validation_loss.cpu())
             train_aucs.append(train_auc)
             validation_aucs.append(validation_auc)
 
@@ -138,7 +138,7 @@ class SiameseNetwork(nn.Module):
             "train loss": train_losses[:best_model_ind],
             "validation loss": validation_losses[:best_model_ind],
             "train ROC-AUC": train_aucs[:best_model_ind],
-            "validation  ROC-AUC": validation_aucs[:best_model_ind]
+            "validation ROC-AUC": validation_aucs[:best_model_ind]
         }
 
     def evaluate_model(self, dataloader: DataLoader, loss_criterion):
