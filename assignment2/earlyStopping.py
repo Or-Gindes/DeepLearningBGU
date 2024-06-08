@@ -1,5 +1,6 @@
 import torch
 
+
 class EarlyStopping:
     def __init__(self, patience=20):
         self.epoch = 0
@@ -11,7 +12,7 @@ class EarlyStopping:
     def __call__(self, epoch, validation_loss, model):
         if self.best_score is None or self.best_score > validation_loss:
             self.best_score = validation_loss
-            self.save_checkpoint(validation_loss, model)
+            self.save_checkpoint(model)
             self.counter = 0
             self.epoch = epoch
         else:
@@ -19,5 +20,6 @@ class EarlyStopping:
             if self.counter == 20:
                 self.early_stop = True
 
-    def save_checkpoint(self, validation_loss: float, model):
-        torch.save(model.state_dict(), f'model_val_loss_{validation_loss}.pt')
+    @staticmethod
+    def save_checkpoint(model):
+        torch.save(model.state_dict(), f'model_checkpnt.pt')

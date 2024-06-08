@@ -10,15 +10,14 @@ from siameseNetwork import SiameseNetwork
 
 
 DATASET_FOLDER = "lfw2"
-LEARNING_RATE = 1e-3
-BATCH_SIZE = 32
+LEARNING_RATE = 5e-3
+BATCH_SIZE = 128
 EPOCHS = 200
 PATIENCE = 20
 LAMBDA = 0.99
 
 
 def main():
-    device = ("cuda" if torch.cuda.is_available() else "cpu")
     ds = PrepareDataset(directory=os.path.join(os.getcwd(), DATASET_FOLDER))
     train_image_pairs, train_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTrain.txt"))
 
@@ -40,8 +39,9 @@ def main():
 
     validation_dataloader = DataLoader(validation_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-    model = SiameseNetwork().to(device)
+    model = SiameseNetwork()
     optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
+    criterion = torch.nn.BCEWithLogitsLoss()
     lambda_ = lambda epoch: LAMBDA
     scheduler = lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lambda_)
     early_stopping = EarlyStopping(patience=PATIENCE)
@@ -50,6 +50,7 @@ def main():
         validation_dataloader=validation_dataloader,
         epoch=EPOCHS,
         optimizer=optimizer,
+        loss_criterion=criterion,
         scheduler=scheduler,
         early_stopping=early_stopping
     )
