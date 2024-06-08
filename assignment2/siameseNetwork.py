@@ -8,9 +8,11 @@ import time
 np.random.seed(0)
 torch.manual_seed(0)
 
+DROPOUT = 0.25
+
 
 class SiameseNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, expanded_linear=True):
         super(SiameseNetwork, self).__init__()
         self.device = ("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -19,42 +21,51 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
-            nn.Dropout(0.2),
+            nn.Dropout(DROPOUT),
+
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=7),
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
-            nn.Dropout(0.2),
+            nn.Dropout(DROPOUT),
+
             nn.Conv2d(in_channels=128, out_channels=128, kernel_size=4),
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2),
-            nn.Dropout(0.2),
+            nn.Dropout(DROPOUT),
+
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
         )
         self.liner = nn.Sequential(
+            nn.Flatten(),
             nn.Linear(in_features=9216, out_features=4096),
             nn.Sigmoid()
         )
-        self.out = nn.Sequential(
-            nn.Linear(in_features=4096, out_features=2048),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=2048, out_features=1024),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=1024, out_features=512),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=512, out_features=1),
-            nn.Sigmoid()
-        )
+        if expanded_linear:
+            self.out = nn.Sequential(
+                nn.Linear(in_features=4096, out_features=2048),
+                nn.ReLU(),
+                nn.Dropout(DROPOUT),
+                nn.Linear(in_features=2048, out_features=1024),
+                nn.ReLU(),
+                nn.Dropout(DROPOUT),
+                nn.Linear(in_features=1024, out_features=512),
+                nn.ReLU(),
+                nn.Dropout(DROPOUT),
+                nn.Linear(in_features=512, out_features=64),
+                nn.ReLU(),
+                nn.Dropout(DROPOUT),
+                nn.Linear(in_features=64, out_features=1),
+                nn.Sigmoid()
+            )
+        else:
+            self.out = nn.Sequential(nn.Linear(in_features=4096, out_features=1), nn.Sigmoid())
 
     def embedding(self, x):
         x = self.conv(x)
-        x = x.view(x.size()[0], -1)
         x = self.liner(x)
         return x
 
@@ -62,7 +73,7 @@ class SiameseNetwork(nn.Module):
         x1 = self.embedding(x1)
         x2 = self.embedding(x2)
         l1_distance = torch.abs(x1 - x2)
-        pred = torch.sigmoid(self.out(l1_distance))
+        pred = self.out(l1_distance)
         return pred
 
     def train_model(
@@ -87,6 +98,7 @@ class SiameseNetwork(nn.Module):
         for epoch in range(epoch):
             start_epoch_time = time.time()
             train_loss = torch.tensor(0.0, device=self.device)
+            train_acc = torch.tensor(0.0, device=self.device)
             train_predictions = []
             train_labels = []
             for x1, x2, label in train_dataloader:
@@ -102,17 +114,20 @@ class SiameseNetwork(nn.Module):
                 train_loss += loss.item()
                 train_predictions.append(prediction.detach().cpu().numpy().squeeze())
                 train_labels.append(label.cpu().numpy().squeeze())
+                train_acc += ((prediction > 0.5).float().squeeze() == label).sum().item()
 
             end_epoch_time = time.time()
             train_predictions = np.concatenate(train_predictions)  # flatten train_predictions
             train_labels = np.concatenate(train_labels)  # flatten labels
             train_loss /= len(train_dataloader)
             train_auc = roc_auc_score(train_labels, train_predictions)
+            train_acc = 100 * train_acc / len(train_predictions)
 
-            validation_loss, validation_auc = self.evaluate_model(validation_dataloader, loss_criterion)
+            validation_loss, validation_auc, val_accuracy, _ = self.evaluate_model(validation_dataloader, loss_criterion)
             print(
                 f'Epoch {epoch}, Train Loss: {train_loss:.3f}, Train ROC-AUC: {train_auc:.3f}, '
-                f'Val Loss: {validation_loss:.3f}, Val ROC-AUC: {validation_auc:.3f}, '
+                f'Train Accuracy: {train_acc:.3f}% Val Loss: {validation_loss:.3f}, '
+                f'Val ROC-AUC: {validation_auc:.3f}, Val Accuracy: {val_accuracy:.3f}%, '
                 f'Duration: {end_epoch_time-start_epoch_time:.3f} Seconds.'
             )
 
@@ -150,6 +165,7 @@ class SiameseNetwork(nn.Module):
     def evaluate_model(self, dataloader: DataLoader, loss_criterion):
         self.eval()
         loss = 0.
+        accuracy = 0.
         predictions = []
         labels = []
         with torch.no_grad():
@@ -159,9 +175,11 @@ class SiameseNetwork(nn.Module):
                 loss += loss_criterion(prediction, label.unsqueeze(1).float())
                 predictions.append(prediction.cpu().detach().numpy().squeeze())
                 labels.append(label.cpu().numpy().squeeze())
+                accuracy += ((prediction > 0.5).float().squeeze() == label).sum().item()
 
         predictions = np.concatenate(predictions)
         labels = np.concatenate(labels)
         loss /= len(dataloader)
+        accuracy = accuracy * 100 / len(predictions)
         auc = roc_auc_score(labels, predictions)
-        return loss, auc
+        return loss, auc, accuracy, predictions

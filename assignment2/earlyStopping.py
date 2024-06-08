@@ -10,7 +10,7 @@ class EarlyStopping:
         self.early_stop = False
 
     def __call__(self, epoch, validation_loss, model):
-        if self.best_score is None or self.best_score >= validation_loss:
+        if self.best_score is None or self.best_score > validation_loss:
             self.best_score = validation_loss
             self.save_checkpoint(model)
             self.counter = 0
