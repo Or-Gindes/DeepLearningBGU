@@ -19,7 +19,7 @@ LAMBDA = 0.99
 
 def main():
     ds = PrepareDataset(directory=os.path.join(os.getcwd(), DATASET_FOLDER))
-    train_image_pairs, train_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTrain.txt"))
+    train_image_pairs, train_labels, validation_image_pairs, validation_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTrain.txt"))
     train_dataset = FacesDataLoader(
         images=train_image_pairs,
         labels=train_labels,
@@ -28,8 +28,13 @@ def main():
 
     train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
+    validation_dataset = FacesDataLoader(
+        images=validation_image_pairs,
+        labels=validation_labels,
+        transform=transforms.Compose([transforms.Resize((105, 105)), transforms.ToTensor()])
+    )
 
-    validation_image_pairs, validation_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTest.txt"))
+    test_image_pairs, test_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTest.txt"), mode='test')
 
     validation_dataset = FacesDataLoader(
         images=validation_image_pairs,
@@ -38,7 +43,6 @@ def main():
     )
 
     validation_dataloader = DataLoader(validation_dataset, batch_size=BATCH_SIZE, shuffle=True)
-
 
     model = SiameseNetwork()
     optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
