@@ -33,8 +33,23 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
         )
-        self.liner = nn.Sequential(nn.Linear(in_features=9216, out_features=4096), nn.Sigmoid())
-        self.out = nn.Linear(in_features=4096, out_features=1)
+        self.liner = nn.Sequential(
+            nn.Linear(in_features=9216, out_features=4096),
+            nn.Sigmoid()
+        )
+        self.out = nn.Sequential(
+            nn.Linear(in_features=4096, out_features=2048),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(in_features=2048, out_features=1024),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(in_features=1024, out_features=512),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(in_features=512, out_features=1),
+            nn.Sigmoid()
+        )
 
     def embedding(self, x):
         x = self.conv(x)
@@ -69,7 +84,6 @@ class SiameseNetwork(nn.Module):
 
         for epoch in range(epoch):
             train_loss = torch.tensor(0.0, device=self.device)
-            train_auc = torch.tensor(0.0, device=self.device)
             train_predictions = []
             train_labels = []
             for x1, x2, label in train_dataloader:
@@ -83,7 +97,6 @@ class SiameseNetwork(nn.Module):
                 optimizer.step()
 
                 train_loss += loss.item()
-                train_auc += torch.sum(torch.all(prediction >= 0.5) == label)
                 train_predictions.append(prediction.detach().cpu().numpy().squeeze())
                 train_labels.append(label.cpu().numpy().squeeze())
 
@@ -128,13 +141,13 @@ class SiameseNetwork(nn.Module):
             "validation  ROC-AUC": validation_aucs[:best_model_ind]
         }
 
-    def evaluate_model(self, validation_dataloader: DataLoader, loss_criterion):
+    def evaluate_model(self, dataloader: DataLoader, loss_criterion):
         self.eval()
         loss = 0.
         predictions = []
         labels = []
         with torch.no_grad():
-            for x1, x2, label in validation_dataloader:
+            for x1, x2, label in dataloader:
                 x1, x2, label = x1.to(self.device), x2.to(self.device), label.to(self.device)
                 prediction = self.forward(x1, x2)
                 loss += loss_criterion(prediction, label.unsqueeze(1).float())
@@ -143,7 +156,6 @@ class SiameseNetwork(nn.Module):
 
         predictions = np.concatenate(predictions)
         labels = np.concatenate(labels)
-        loss /= len(validation_dataloader)
+        loss /= len(dataloader)
         auc = roc_auc_score(labels, predictions)
-
         return loss, auc
