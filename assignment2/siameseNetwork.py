@@ -3,6 +3,7 @@ import numpy as np
 from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score
+import time
 
 np.random.seed(0)
 torch.manual_seed(0)
@@ -82,7 +83,9 @@ class SiameseNetwork(nn.Module):
         train_aucs = []
         validation_aucs = []
 
+        start_total_time = end_epoch_time = time.time()
         for epoch in range(epoch):
+            start_epoch_time = time.time()
             train_loss = torch.tensor(0.0, device=self.device)
             train_predictions = []
             train_labels = []
@@ -100,6 +103,7 @@ class SiameseNetwork(nn.Module):
                 train_predictions.append(prediction.detach().cpu().numpy().squeeze())
                 train_labels.append(label.cpu().numpy().squeeze())
 
+            end_epoch_time = time.time()
             train_predictions = np.concatenate(train_predictions)  # flatten train_predictions
             train_labels = np.concatenate(train_labels)  # flatten labels
             train_loss /= len(train_dataloader)
@@ -108,7 +112,8 @@ class SiameseNetwork(nn.Module):
             validation_loss, validation_auc = self.evaluate_model(validation_dataloader, loss_criterion)
             print(
                 f'Epoch {epoch}, Train Loss: {train_loss:.3f}, Train ROC-AUC: {train_auc:.3f}, '
-                f'Val Loss: {validation_loss:.3f}, Val ROC-AUC: {validation_auc:.3f}'
+                f'Val Loss: {validation_loss:.3f}, Val ROC-AUC: {validation_auc:.3f}, '
+                f'Duration: {end_epoch_time-start_epoch_time:.3f} Seconds.'
             )
 
             # Store training history
@@ -132,7 +137,8 @@ class SiameseNetwork(nn.Module):
             f'Finish Training, stats of best model:\n'
             f'Epochs {best_model_ind}, Train Loss: {train_losses[best_model_ind]:.3f}, '
             f'Train ROC-AUC: {train_aucs[best_model_ind]:.3f}, Val Loss: {validation_losses[best_model_ind]:.3f}, '
-            f'Val ROC-AUC: {validation_aucs[best_model_ind]:.3f}')
+            f'Val ROC-AUC: {validation_aucs[best_model_ind]:.3f}, '
+            f'Total Training Duration: {(end_epoch_time-start_total_time):.3f} Seconds')
 
         return {
             "train loss": train_losses[:best_model_ind],
