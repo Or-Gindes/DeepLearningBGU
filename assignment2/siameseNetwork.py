@@ -112,7 +112,7 @@ class SiameseNetwork(nn.Module):
             )
 
             # Store training history
-            train_losses.append(train_loss)
+            train_losses.append(train_loss.cpu())
             validation_losses.append(validation_loss)
             train_aucs.append(train_auc)
             validation_aucs.append(validation_auc)
