@@ -11,7 +11,7 @@ device = ("cuda" if torch.cuda.is_available() else "cpu")
 
 def main():
     ds = PrepareDataset(directory='./lfw2')
-    train_image_pairs, train_labels = ds.load_dataset(file_path=r'./pairsDevTrain.txt')
+    train_image_pairs, train_labels, validation_image_pairs, validation_labels = ds.load_dataset(file_path=r'./pairsDevTrain.txt', mode='train')
 
     train_dataset = FacesDataLoader(images=train_image_pairs,
                                     labels=train_labels,
@@ -19,13 +19,15 @@ def main():
 
     train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
-    validation_image_pairs, validation_labels = ds.load_dataset(file_path=r'./pairsDevTest.txt')
-
     validation_dataset = FacesDataLoader(images=validation_image_pairs,
                                          labels=validation_labels,
                                          transform=transforms.Compose([transforms.ToTensor()]))
 
     validation_dataloader = DataLoader(validation_dataset, batch_size=32, shuffle=True)
+
+    test_image_pairs, test_labels = ds.load_dataset(file_path=r'./pairsDevTest.txt', mode='test')
+
+    test_dataloader = DataLoader(validation_dataset, batch_size=32, shuffle=True)
 
     model = SiameseNetwork().to(device)
     lr = 0.05
