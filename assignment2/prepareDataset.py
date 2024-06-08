@@ -78,7 +78,7 @@ class PrepareDataset:
                     return test_image_pairs, test_labels
 
         elif mode == 'train':
-            people_in_validation = self.train_validation_split(file_path=file_path, ratio=0.2)
+            people_in_validation = self.train_validation_split(file_path=file_path, ratio=0.1)
             train_image_pairs = []
             train_labels = []
             validation_image_pairs = []

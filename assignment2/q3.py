@@ -51,7 +51,7 @@ def main():
         early_stopping=early_stopping
     )
 
-    test_image_pairs, test_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTest.txt"))
+    test_image_pairs, test_labels = ds.load_dataset(file_path=os.path.join(os.getcwd(), "pairsDevTest.txt"), mode="test")
     test_dataset = FacesDataLoader(
         images=test_image_pairs,
         labels=test_labels,
