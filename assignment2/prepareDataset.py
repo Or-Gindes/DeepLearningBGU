@@ -127,9 +127,9 @@ class PrepareDataset:
         else:
             raise ValueError(f'Invalid "mode" variable, expected ["train", "test"], received "{mode}"')
 
-    def train_validation_split(self, file_path: str, ratio: float = 0.1) -> set[object]:
+    def train_validation_split(self, file_path: str, ratio: float = 0.2) -> set[object]:
         """
-        returns train set and validation set of unique people for one-shot learning. 
+        returns train set and validation set of unique people for one-shot learning.
         This division is set up so that no subject from the validation set is included in the train set.
         :param file_path: string path to train txt file with the desired pairs in the dataset
         :param ratio: initial size ratio of validation set. Due to the need of unique unseen individuals, this may grow.
@@ -156,7 +156,7 @@ class PrepareDataset:
         pairs.drop_duplicates(inplace=True)
         assert len(pairs) % 2 == 0
         pairs = pairs.iloc[:int(len(pairs) / 2)]
-        train_pairs, validation_pairs = train_test_split(pairs, test_size=0.1, random_state=1)
+        train_pairs, validation_pairs = train_test_split(pairs, test_size=ratio, random_state=1)
         people_in_validation = set(np.unique(validation_pairs['A'])).union(set(np.unique(validation_pairs['B'])))
 
         return people_in_validation
