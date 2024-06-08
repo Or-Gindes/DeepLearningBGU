@@ -104,6 +104,9 @@ class SiameseNetwork(nn.Module):
             train_aucs.append(train_auc)
             validation_aucs.append(validation_auc)
 
+            # Step the scheduler
+            scheduler.step()
+
             # Early Stopping
             early_stopping(epoch, validation_loss, self)
             if early_stopping.early_stop:
