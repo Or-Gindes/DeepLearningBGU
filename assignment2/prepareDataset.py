@@ -14,7 +14,8 @@ class PrepareDataset:
 
     def scan_dataset(self):
         """
-        scans through all available files, creates a full dataset to be used to create a validation dataset
+        scans through all available files, creates a dictionary with a person's name,
+        and a list of all available image paths of said person.
         """
         # Iterate through each directory in the base folder
         for person_name in os.listdir(self.directory):
@@ -32,14 +33,15 @@ class PrepareDataset:
                 # Add the list of image files to the dictionary
                 self.image_dict[person_name] = images
 
-    def load_dataset(self, file_path: str, mode: str = 'train') -> tuple[list[tuple[Any, Any]], list[int]] | tuple[
+    def load_dataset(self, file_path: str, mode: str = 'train', ratio : float = None) -> tuple[list[tuple[Any, Any]], list[int]] | tuple[
         list[Any], list[int], list[Any], list[int]]:
         """
         reads a txt file with predefined pairs and creates:
             mode = 'train' : train and validation datasets.
             mode = 'test' : test dataset.
         :param file_path: string path to txt file with the desired pairs in the dataset
-        :param mode: 'train', 'test'. default = 'train',
+        :param mode: 'train', 'test'. default = 'train'.
+        :param ratio: baseline ratio of validation set from test set.
         :return: train_image_pairs, train_labels, validation_image_pairs, validation_labels | test_image_pairs, test_labels
         """
         if mode == 'test':
@@ -49,6 +51,8 @@ class PrepareDataset:
                 rows = f.readlines()
                 num_samples = len(rows)
                 i = 1
+                # loop through the text file
+                # from each row extract the image pairs and label
                 while i < num_samples:
                     row_segments = rows[i].strip().split()
                     if len(row_segments) == 3:
@@ -78,11 +82,15 @@ class PrepareDataset:
             return test_image_pairs, test_labels
 
         elif mode == 'train':
-            people_in_validation = self.train_validation_split(file_path=file_path, ratio=0.1)
+            # returns list of unique people that are removed from the train set to be used in the validation set for One-shot image recognition
+            people_in_validation = self.train_validation_split(file_path=file_path, ratio=ratio)
             train_image_pairs = []
             train_labels = []
             validation_image_pairs = []
             validation_labels = []
+            # loop through the text file
+            # from each row extract the image pairs and label
+            # appends to train lists or validation lists according to people_in_validation variable
             with open(file_path, 'r') as f:
                 rows = f.readlines()
                 num_samples = len(rows)
@@ -127,9 +135,9 @@ class PrepareDataset:
         else:
             raise ValueError(f'Invalid "mode" variable, expected ["train", "test"], received "{mode}"')
 
-    def train_validation_split(self, file_path: str, ratio: float = 0.2) -> set[object]:
+    def train_validation_split(self, file_path: str, ratio: float = 0.1) -> set[object]:
         """
-        returns train set and validation set of unique people for one-shot learning.
+        returns set of unique people to be used in the validation set - for one-shot learning.
         This division is set up so that no subject from the validation set is included in the train set.
         :param file_path: string path to train txt file with the desired pairs in the dataset
         :param ratio: initial size ratio of validation set. Due to the need of unique unseen individuals, this may grow.
@@ -150,12 +158,15 @@ class PrepareDataset:
                     person_b.append(row_segments[2])
 
                 i += 1
+        # create list of all existing pairs regardless of position. i.e. A+B==B+A
         person_a, person_b = person_a + person_b, person_b + person_a
         assert len(person_a) == len(person_b)
         pairs = pd.DataFrame({'A': person_a, 'B': person_b})
         pairs.drop_duplicates(inplace=True)
         assert len(pairs) % 2 == 0
-        pairs = pairs.iloc[:int(len(pairs) / 2)]
+        pairs = pairs.iloc[:int(len(pairs) / 2)]  # Remove duplication: A+B, B+A -> A+B
+
+        # Randomly sample people according to the given ratio
         train_pairs, validation_pairs = train_test_split(pairs, test_size=ratio, random_state=1)
         people_in_validation = set(np.unique(validation_pairs['A'])).union(set(np.unique(validation_pairs['B'])))
 

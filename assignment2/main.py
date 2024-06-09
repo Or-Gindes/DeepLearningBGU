@@ -20,12 +20,12 @@ EPOCHS = 200
 PATIENCE = 20
 LAMBDA = 0.95
 L2_REG = 1e-5
-
+RATIO = 0.1
 
 def main():
     ds = PrepareDataset(directory=os.path.join(os.getcwd(), DATASET_FOLDER))
     train_image_pairs, train_labels, validation_image_pairs, validation_labels = ds.load_dataset(
-        file_path=os.path.join(os.getcwd(), "pairsDevTrain.txt")
+        file_path=os.path.join(os.getcwd(), "pairsDevTrain.txt"), ratio=RATIO
     )
     train_dataset = FacesDataLoader(
         images=train_image_pairs,
