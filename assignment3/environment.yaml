@@ -1,0 +1,20 @@
+name: deep_learning_env
+channels:
+  - defaults
+  - nvidia
+  - pytorch
+dependencies:
+  - python<3.12
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=11.8
+  - scikit-learn
+  - pandas
+  - numpy
+  - scipy<1.13
+  - matplotlib
+  - gensim
+  - nltk
+  - pip:
+      - ruff  # dev
